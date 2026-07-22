@@ -38,7 +38,7 @@ public class ThirdPersonCamera : MonoBehaviour
 #if UNITY_EDITOR || UNITY_STANDALONE
         Cursor.lockState = CursorLockMode.Locked;
 #else
-       Cusor.lockState = CursorLockMode.None;
+        Cursor.lockState = CursorLockMode.None;
 #endif
     }
 
@@ -58,31 +58,22 @@ public class ThirdPersonCamera : MonoBehaviour
         yaw += Input.GetAxis("Mouse X") * sensitivityX;
         pitch -= Input.GetAxis("Mouse Y") * sensitivityY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-
 #else
-        Vector2 lastTouchPos = Vector2.zero;
-        bool isTouching = false;
-        if (Input.touchCount == 1)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if (touch.phase == TouchPhase.Began)
+        for (int i = 0; i < Input.touchCount; i++)
             {
-                lastTouchPos = touch.position;
-                isTouching = true;
+                Touch touch = Input.GetTouch(i);
+ 
+                if (touch.position.x < Screen.width * 0.5f) continue;
+ 
+                if (touch.phase == TouchPhase.Moved)
+                {
+                    Vector2 delta = touch.deltaPosition / Time.deltaTime;
+ 
+                    yaw   += delta.x * sensitivityX * DefaultSensitivityMobile * Time.deltaTime;
+                    pitch -= delta.y * sensitivityY * DefaultSensitivityMobile * Time.deltaTime;
+                    pitch  = Mathf.Clamp(pitch, minPitch, maxPitch);
+                }
             }
-            else if (touch.phase == TouchPhase.Moved && isTouching)
-            {
-                Vector2 delta = touch.position - lastTouchPos;
-                yaw += delta.x + sensitivityX * DefaultSensitivityMobile;
-                pitch -= delta.y + sensitivityY * DefaultSensitivityMobile;
-                pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-            }
-            else if (touch.phase == TouchPhase.Ended)
-            {
-                isTouching = false;
-            }
-        }
 #endif
     }
 
@@ -99,8 +90,8 @@ public class ThirdPersonCamera : MonoBehaviour
             targetDistance = Mathf.Clamp(hit.distance - collisionOffest, minDistance, maxDistance);
 
         currentDistance = Mathf.Lerp(currentDistance, targetDistance, positionSmooth * Time.deltaTime);
-
         Vector3 desiredPos = pivotPos + desiredDir * currentDistance;
+
         transform.position = Vector3.Lerp(transform.position, desiredPos, positionSmooth * Time.deltaTime);
         transform.LookAt(pivotPos);
     }
